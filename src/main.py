@@ -1,37 +1,18 @@
 from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
 from uuid import uuid4
+
+from . import schemas
 
 
 app = FastAPI()
 
 
-# Base model for User containing common fields
-class UserBase(BaseModel):
-    name: str
-
-
-# Model used for updating user, inherits from UserBase (just name)
-class UserUpdate(UserBase):
-    pass
-
-
-# Model used for creating a user, adds a password field
-class UserCreate(UserBase):
-    password: str
-
-
-# Model representing the user after creation (response model), includes the user ID
-class User(UserBase):
-    id: str
-
-
 # Temporary in-memory list to store users
-users: list[User] = []
+users: list[schemas.User] = []
 
 
-@app.post("/users", response_model=User)
-def create_user(payload: UserCreate):
+@app.post("/users", response_model=schemas.User)
+def create_user(payload: schemas.UserCreate):
     new_user = payload.model_dump()
     username = new_user["name"]
 
@@ -53,12 +34,12 @@ def create_user(payload: UserCreate):
     return new_user
 
 
-@app.get("/", response_model=list[User])
+@app.get("/", response_model=list[schemas.User])
 def get_users():
     return users
 
 
-@app.get("/users/{id}", response_model=User)
+@app.get("/users/{id}", response_model=schemas.User)
 def get_user(id: str):
 
     for user in users:
@@ -69,8 +50,8 @@ def get_user(id: str):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
 
-@app.put("/users/{id}", response_model=User)
-def update_user(id: str, payload: UserUpdate):
+@app.put("/users/{id}", response_model=schemas.User)
+def update_user(id: str, payload: schemas.UserUpdate):
 
     for user in users:
 
