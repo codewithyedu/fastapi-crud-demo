@@ -19,7 +19,7 @@ def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(
         id=user_id,
         name=user.name,
-        hashed_password=fake_hashed_password,
+        password=fake_hashed_password,
     )
     db.add(db_user)
     db.commit()
@@ -32,6 +32,7 @@ def update_user(db: Session, user: schemas.User, payload: schemas.UserUpdate):
     user.name = new_name
     db.commit()
     db.refresh(user)
+    return user
 
 
 def delete_user(db: Session, user: schemas.User):

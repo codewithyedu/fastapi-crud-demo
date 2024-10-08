@@ -1,74 +1,67 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
+from sqlalchemy.orm import Session
 from uuid import uuid4
 
-from . import schemas
+from . import schemas, crud, models
+from .db import SessionLocal, engine
 
 
-# Temporary in-memory list to store users
-users: list[schemas.User] = []
+models.Base.metadata.create_all(bind=engine)
+
 
 router = APIRouter()
 
 
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 @router.post("/users", response_model=schemas.User)
-def create_user(payload: schemas.UserCreate):
-    new_user = payload.model_dump()
-    username = new_user["name"]
-
-    for user in users:
-
-        if user["name"] == username:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists"
-            )
-
-    new_user["id"] = str(uuid4())
-
-    # Simulate password hashing (use proper hashing in production)
-    hashed_password = new_user["password"] + "added_some_hash"
-    new_user["password"] = hashed_password
-
-    users.append(new_user)
-
+def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db)):
+    new_user = crud.create_user(db=db, user=payload)
     return new_user
 
 
 @router.get("/", response_model=list[schemas.User])
-def get_users():
+def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_users(db=db, skip=skip, limit=limit)
     return users
 
 
 @router.get("/users/{id}", response_model=schemas.User)
-def get_user(id: str):
+def get_user(user_id: str, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db=db, user_id=user_id)
 
-    for user in users:
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        if user["id"] == id:
-            return user
-
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return db_user
 
 
 @router.put("/users/{id}", response_model=schemas.User)
-def update_user(id: str, payload: schemas.UserUpdate):
+def update_user(
+    user_id: str, payload: schemas.UserUpdate, db: Session = Depends(get_db)
+):
+    db_user = crud.get_user(db=db, user_id=user_id)
 
-    for user in users:
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        if user["id"] == id:
-            new_name = payload.name
-            user["name"] = new_name
-            return user
+    updated_user = crud.update_user(db=db, user=db_user, payload=payload)
 
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return updated_user
 
 
 @router.delete("/users/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(id: str):
+def delete_user(user_id: str, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db=db, user_id=user_id)
 
-    for idx, user in enumerate(users):
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
 
-        if user["id"] == id:
-            users.pop(idx)
-            return
-
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    crud.delete_user(user=db_user, db=db)
