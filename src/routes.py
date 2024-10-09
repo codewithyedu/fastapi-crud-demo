@@ -23,6 +23,12 @@ def get_db():
 
 @router.post("/users", response_model=schemas.User)
 def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db)):
+    if crud.get_user_by_name(db=db, user_name=payload.name) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with same username already exists",
+        )
+
     new_user = crud.create_user(db=db, user=payload)
     return new_user
 
@@ -47,6 +53,12 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
 def update_user(
     user_id: str, payload: schemas.UserUpdate, db: Session = Depends(get_db)
 ):
+    if crud.get_user_by_name(db=db, user_name=payload.name) is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with same username already exists",
+        )
+
     db_user = crud.get_user(db=db, user_id=user_id)
 
     if db_user is None:
