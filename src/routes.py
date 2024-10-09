@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlalchemy.orm import Session
-from uuid import uuid4
 
 from . import schemas, crud, models
 from .db import SessionLocal, engine
