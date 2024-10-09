@@ -27,7 +27,7 @@ A simple FastAPI project demonstrating basic CRUD operations for user management
 
 2. Install dependencies:
    ```bash
-   pip install "fastapi[standard]"
+   pip install -r requirements.txt
    ```
 
 ### Running the App
@@ -35,10 +35,12 @@ A simple FastAPI project demonstrating basic CRUD operations for user management
 Run the application with:
 
 ```bash
-fastapi dev main.py
+fastapi dev src/main.py
 ```
 
 Access the API at `http://127.0.0.1:8000/`.
+
+Access the API docs at `http://127.0.0.1:8000/docs`.
 
 ## License
 
