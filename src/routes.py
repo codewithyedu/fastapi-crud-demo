@@ -43,7 +43,9 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     db_user = crud.get_user(db=db, user_id=user_id)
 
     if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     return db_user
 
@@ -61,7 +63,9 @@ def update_user(
     db_user = crud.get_user(db=db, user_id=user_id)
 
     if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     updated_user = crud.update_user(db=db, user=db_user, payload=payload)
 
@@ -73,6 +77,8 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
     db_user = crud.get_user(db=db, user_id=user_id)
 
     if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
 
     crud.delete_user(user=db_user, db=db)
